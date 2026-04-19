@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevBoard</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3450;
+      --text: #e2e8f0;
+      --muted: #8892b0;
+      --accent: #7c83fd;
+      --green: #4ade80;
+      --yellow: #fbbf24;
+      --blue: #60a5fa;
+      --radius: 10px;
+      --col-pending: #fbbf24;
+      --col-active: #60a5fa;
+      --col-complete: #4ade80;
+    }
+    .light {
+      --bg: #f0f2f7;
+      --surface: #ffffff;
+      --surface2: #e8eaf2;
+      --border: #d1d5e0;
+      --text: #1a202c;
+      --muted: #6b7280;
+      --accent: #5a62f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    header h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header h1 span { color: var(--accent); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    #status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.3s;
+    }
+    #status-dot.connected { background: var(--green); }
+
+    #theme-toggle {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    #theme-toggle:hover { border-color: var(--accent); }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 24px 28px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .column-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 2px 8px;
+      border-bottom: 2px solid var(--border);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .column-header .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+
+    .column-header .count {
+      margin-left: auto;
+      background: var(--surface2);
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent)22;
+    }
+
+    .card-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-desc {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      min-height: 2.2em;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .task-list {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 8px;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+
+    .card.expanded .task-list { display: flex; }
+
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .task-item .icon { flex-shrink: 0; margin-top: 1px; }
+    .task-item.done { text-decoration: line-through; opacity: 0.55; }
+    .task-item.in-progress { color: var(--blue); }
+
+    .card-footer {
+      margin-top: 10px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .empty-column {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 32px 0;
+      opacity: 0.5;
+    }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    .badge-pending { background: #fbbf2422; color: var(--yellow); }
+    .badge-active { background: #60a5fa22; color: var(--blue); }
+    .badge-complete { background: #4ade8022; color: var(--green); }
+
+    @media (max-width: 900px) {
+      .board { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Dev<span>Board</span></h1>
+    <div class="header-right">
+      <div id="status-dot" title="WebSocket disconnected"></div>
+      <button id="theme-toggle">Light</button>
+    </div>
+  </header>
+
+  <div class="board">
+    <div class="column" id="col-pending">
+      <div class="column-header">
+        <span class="dot" style="background:var(--col-pending)"></span>
+        Pending
+        <span class="count" id="count-pending">0</span>
+      </div>
+      <div class="cards" id="cards-pending"></div>
+    </div>
+    <div class="column" id="col-active">
+      <div class="column-header">
+        <span class="dot" style="background:var(--col-active)"></span>
+        Active
+        <span class="count" id="count-active">0</span>
+      </div>
+      <div class="cards" id="cards-active"></div>
+    </div>
+    <div class="column" id="col-complete">
+      <div class="column-header">
+        <span class="dot" style="background:var(--col-complete)"></span>
+        Complete
+        <span class="count" id="count-complete">0</span>
+      </div>
+      <div class="cards" id="cards-complete"></div>
+    </div>
+  </div>
+
+  <script>
+    const themeBtn = document.getElementById('theme-toggle');
+    let dark = true;
+    themeBtn.addEventListener('click', () => {
+      dark = !dark;
+      document.body.classList.toggle('light', !dark);
+      themeBtn.textContent = dark ? 'Light' : 'Dark';
+    });
+
+    function timeAgo(iso) {
+      if (!iso) return '';
+      const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+      if (diff < 60) return 'just now';
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return `${Math.floor(diff / 86400)}d ago`;
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function renderCard(proj) {
+      const { todo = [], inProgress = [], done = [] } = proj.tasks || {};
+      const total = todo.length + inProgress.length + done.length;
+      const pct = total ? Math.round((done.length / total) * 100) : 0;
+      const colorMap = { pending: '#fbbf24', active: '#60a5fa', complete: '#4ade80' };
+      const fillColor = colorMap[proj.status] || '#fbbf24';
+
+      const taskItems = [
+        ...inProgress.map(t => `<div class="task-item in-progress"><span class="icon">◑</span><span>${escHtml(t)}</span></div>`),
+        ...todo.map(t => `<div class="task-item"><span class="icon">○</span><span>${escHtml(t)}</span></div>`),
+        ...done.map(t => `<div class="task-item done"><span class="icon">✓</span><span>${escHtml(t)}</span></div>`),
+      ].join('');
+
+      const progressLabel = total
+        ? `${done.length} / ${total} tasks done`
+        : 'No tasks';
+
+      return `
+        <div class="card" data-id="${escHtml(proj.id)}" onclick="this.classList.toggle('expanded')">
+          <span class="status-badge badge-${proj.status}">${proj.status}</span>
+          <div class="card-name" title="${escHtml(proj.folderName)}">${escHtml(proj.name)}</div>
+          <div class="card-desc">${escHtml(proj.description || '')}</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${pct}%;background:${fillColor}"></div>
+          </div>
+          <div class="progress-label">${progressLabel}</div>
+          <div class="task-list">${taskItems || '<div class="task-item"><span class="icon">—</span><span>No tasks found</span></div>'}</div>
+          <div class="card-footer">${timeAgo(proj.lastModified)}</div>
+        </div>`;
+    }
+
+    function renderAll(projects) {
+      const cols = { pending: [], active: [], complete: [] };
+      for (const p of projects) {
+        const col = cols[p.status] || cols.pending;
+        col.push(p);
+      }
+      for (const status of ['pending', 'active', 'complete']) {
+        const container = document.getElementById(`cards-${status}`);
+        const count = document.getElementById(`count-${status}`);
+        const list = cols[status];
+        count.textContent = list.length;
+        if (list.length === 0) {
+          container.innerHTML = `<div class="empty-column">No projects</div>`;
+        } else {
+          // Preserve expanded state
+          const expanded = new Set(
+            Array.from(container.querySelectorAll('.card.expanded')).map(el => el.dataset.id)
+          );
+          container.innerHTML = list.map(renderCard).join('');
+          container.querySelectorAll('.card').forEach(el => {
+            if (expanded.has(el.dataset.id)) el.classList.add('expanded');
+          });
+        }
+      }
+    }
+
+    // Initial fetch
+    fetch('/api/projects')
+      .then(r => r.json())
+      .then(renderAll)
+      .catch(e => console.error('Fetch failed', e));
+
+    // WebSocket
+    const statusDot = document.getElementById('status-dot');
+    function connect() {
+      const ws = new WebSocket(`ws://${location.host}`);
+      ws.onopen = () => {
+        statusDot.classList.add('connected');
+        statusDot.title = 'WebSocket connected';
+      };
+      ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'update') renderAll(msg.projects);
+      };
+      ws.onclose = () => {
+        statusDot.classList.remove('connected');
+        statusDot.title = 'Reconnecting...';
+        setTimeout(connect, 2000);
+      };
+      ws.onerror = () => ws.close();
+    }
+    connect();
+  </script>
+</body>
+</html>
