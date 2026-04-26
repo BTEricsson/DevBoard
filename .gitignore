@@ -1,4 +1,8 @@
 node_modules/
-.env
 .DS_Store
-.claude/
+.env
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+.claude/hooks/*
+!.claude/hooks/check-plan.sh
