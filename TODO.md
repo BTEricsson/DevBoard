@@ -2,6 +2,12 @@
 - nested-project-discovery
 - git-status-indicator
 
+### #29 set-task-script
+- [~] Add set-task.js — surgical checkbox state update to reduce token usage
+
+### #28 parser-name-from-overview-only — 2026-05-01 12:09 THERI
+- [x] Only scan the Overview section (up to the first ## heading) for the project name in parser.js
+
 ### #26 fix-gitignore-hook — 2026-04-26 22:07 THERI
 - [x] Un-ignore .claude/settings.json and .claude/hooks/ so the check-plan hook is tracked by git
 

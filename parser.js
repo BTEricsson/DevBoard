@@ -156,7 +156,9 @@ function parseProject(proj) {
     claudeContent = fs.readFileSync(claudeMdPath, 'utf8');
     const lines = claudeContent.split('\n');
 
-    const headingLine = lines.find(l => /^#\s/.test(l));
+    const firstSectionIdx = lines.findIndex((l, i) => i > 0 && /^#{2}\s/.test(l));
+    const overviewLines = lines.slice(0, firstSectionIdx === -1 ? lines.length : firstSectionIdx);
+    const headingLine = overviewLines.find(l => /^#\s/.test(l));
     name = headingLine ? headingLine.replace(/^#+\s+/, '').trim() : folderName;
 
     const statusLine = lines.find(l => /^status\s*:/i.test(l));
