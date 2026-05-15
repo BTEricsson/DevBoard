@@ -16,6 +16,7 @@ Tasks and progress are tracked in `TODO.md`. Always keep it up to date:
 
 - When starting a task → mark it `- [~]`
 - When done → mark it `- [x]`
+- Use `node .claude/set-task.js <state> <pattern>` to update a single checkbox without rewriting the whole file (states: `pending`, `active`, `done`)
 - New ideas or future work → add to `## Backlog`, not to a group
 - New feature work → create a new `### #N group-name` with `- [ ]` tasks, placed directly below `## Backlog`
 

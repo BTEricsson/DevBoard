@@ -2,8 +2,8 @@
 - nested-project-discovery
 - git-status-indicator
 
-### #29 set-task-script
-- [~] Add set-task.js — surgical checkbox state update to reduce token usage
+### #29 set-task-script — 2026-05-15 10:28 THERI
+- [x] Add set-task.js — surgical checkbox state update to reduce token usage
 
 ### #28 parser-name-from-overview-only — 2026-05-01 12:09 THERI
 - [x] Only scan the Overview section (up to the first ## heading) for the project name in parser.js
