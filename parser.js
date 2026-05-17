@@ -208,7 +208,9 @@ function parseProject(proj) {
     lastModified = new Date(Math.max(...times)).toISOString();
   } catch (e) {}
 
-  return { name, description, tasks, status, statusOverride: !!statusOverride, nick, lastModified, hasTodo: !!todoMdPath };
+  const nestedProjects = (proj.nestedProjects || []).map(n => ({ ...parseProject(n), path: n.path }));
+
+  return { name, description, tasks, status, statusOverride: !!statusOverride, nick, lastModified, hasTodo: !!todoMdPath, nestedProjects };
 }
 
 module.exports = { parseProject };

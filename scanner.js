@@ -13,6 +13,36 @@ function readPlanTicket(planMdPath) {
   }
 }
 
+const SKIP_DIRS = new Set(['node_modules', 'vendor', 'dist', 'build', '.git']);
+
+function scanNestedProjects(projectPath) {
+  let entries;
+  try {
+    entries = fs.readdirSync(projectPath, { withFileTypes: true });
+  } catch (e) {
+    return [];
+  }
+
+  const nested = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name.startsWith('.') || SKIP_DIRS.has(entry.name)) continue;
+    const nestedPath = path.join(projectPath, entry.name);
+    const claudeMdPath = path.join(nestedPath, 'CLAUDE.md');
+    if (!fs.existsSync(claudeMdPath)) continue;
+    const todoMdPath = path.join(nestedPath, 'TODO.md');
+    const planMdPath = path.join(nestedPath, 'PLAN.md');
+    nested.push({
+      name: entry.name,
+      path: nestedPath,
+      claudeMdPath,
+      todoMdPath: fs.existsSync(todoMdPath) ? todoMdPath : null,
+      planTicket: readPlanTicket(planMdPath),
+    });
+  }
+  return nested;
+}
+
 function scanProjects(rootDir) {
   if (!rootDir || !fs.existsSync(rootDir)) return [];
 
@@ -38,6 +68,7 @@ function scanProjects(rootDir) {
       claudeMdPath,
       todoMdPath: fs.existsSync(todoMdPath) ? todoMdPath : null,
       planTicket: readPlanTicket(planMdPath),
+      nestedProjects: scanNestedProjects(projectPath),
     });
   }
   return projects;

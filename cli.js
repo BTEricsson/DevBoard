@@ -91,6 +91,14 @@ function renderMenu() {
                  : '';
       const pad = ' '.repeat(Math.max(1, 30 - p.name.length));
       lines.push(`  ${arrow} ${statusDot(p.status)} ${name}${pad}${statusLabel(p.status)}  ${hint}`);
+      for (const np of (p.nestedProjects || [])) {
+        const ng = np.tasks.groups || [];
+        const nActive  = ng.filter(g => g.status === 'active').length;
+        const nPending = ng.filter(g => g.status === 'pending').length;
+        const nHint = nActive ? c.blue(`${nActive} active`) : nPending ? c.yellow(`${nPending} pending`) : '';
+        const nPad = ' '.repeat(Math.max(1, 26 - np.name.length));
+        lines.push(`       ${c.dim('└')} ${statusDot(np.status)} ${c.dim(np.name)}${nPad}${statusLabel(np.status)}  ${nHint}`);
+      }
     }
     lines.push('');
   }
@@ -108,7 +116,10 @@ function renderNow() {
   let found = false;
   for (const p of state.projects) {
     const active = (p.tasks.groups || []).filter(g => g.status === 'active');
-    if (active.length === 0) continue;
+    const nestedActive = (p.nestedProjects || []).filter(np =>
+      (np.tasks.groups || []).some(g => g.status === 'active')
+    );
+    if (active.length === 0 && nestedActive.length === 0) continue;
     found = true;
     lines.push(`  ${c.cyanBold(p.name)}`);
     for (const g of active) {
@@ -116,6 +127,15 @@ function renderNow() {
       lines.push(`    ${c.blue('●')} ${c.blueBold(label)}`);
       for (const t of (g.inProgress || [])) lines.push(`        ${c.blue('◑')} ${t}`);
       for (const t of (g.todo       || [])) lines.push(`        ${c.dim('○')} ${t}`);
+    }
+    for (const np of nestedActive) {
+      lines.push(`    ${c.dim('└')} ${c.cyanBold(np.name)}`);
+      for (const g of (np.tasks.groups || []).filter(g => g.status === 'active')) {
+        const label = g.ticket ? `#${g.ticket} ${g.name}` : g.name;
+        lines.push(`      ${c.blue('●')} ${c.blueBold(label)}`);
+        for (const t of (g.inProgress || [])) lines.push(`          ${c.blue('◑')} ${t}`);
+        for (const t of (g.todo       || [])) lines.push(`          ${c.dim('○')} ${t}`);
+      }
     }
     lines.push('');
   }
@@ -177,6 +197,33 @@ function renderBoard() {
         for (const t of (g.done || [])) lines.push(`      ${c.dim('✓ ' + t)}`);
         lines.push('');
       }
+    }
+  }
+
+  const nested = p.nestedProjects || [];
+  if (nested.length > 0) {
+    lines.push(`  ${c.dim('Nested repos')}`, '');
+    for (const np of nested) {
+      lines.push(`  ${c.dim('└')} ${statusDot(np.status)} ${np.name}`);
+      const npGroups  = np.tasks ? np.tasks.groups  || [] : [];
+      const npBacklog = np.tasks ? np.tasks.backlog || [] : [];
+      const npVisible = [
+        ...npGroups.filter(g => g.status === 'active'),
+        ...npGroups.filter(g => g.status === 'pending'),
+      ];
+      if (npVisible.length === 0 && npBacklog.length === 0) {
+        lines.push(c.dim('       no tasks'));
+      }
+      for (const g of npVisible) {
+        const label = g.ticket ? `#${g.ticket} ${g.name}` : g.name;
+        lines.push(`      ${statusDot(g.status)} ${g.status === 'active' ? c.blueBold(label) : c.bold(label)}`);
+        for (const t of (g.inProgress || [])) lines.push(`          ${c.blue('◑')} ${t}`);
+        for (const t of (g.todo       || [])) lines.push(`          ${c.dim('○')} ${t}`);
+      }
+      if (npBacklog.length > 0) {
+        lines.push(`      ${c.magenta('·')} ${c.dim(`backlog (${npBacklog.length})`)}`);
+      }
+      lines.push('');
     }
   }
 
