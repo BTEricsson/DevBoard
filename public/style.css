@@ -130,6 +130,20 @@ header h1 span { color: var(--accent); }
   box-shadow: 0 0 0 1px var(--accent)22;
 }
 
+.card--nested {
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--surface) 90%, var(--accent) 10%);
+}
+
+.card-parent {
+  font-size: 0.65rem;
+  color: var(--accent);
+  opacity: 0.8;
+  margin-bottom: 2px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
 .card-name {
   font-size: 0.95rem;
   font-weight: 600;

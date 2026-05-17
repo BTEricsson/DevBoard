@@ -1,6 +1,11 @@
 ## Backlog
-- nested-project-discovery
 - git-status-indicator
+
+### #30 nested-project-discovery — 2026-05-17 THERI — 2026-05-17 16:40 THERI
+- [x] Extend scanner.js to discover CLAUDE.md files one level deep within each project directory
+- [x] Attach nested project data (name, tasks, backlog) to the parent project object
+- [x] Render nested project cards within the parent card in the web UI
+- [x] Show nested projects in CLI board view
 
 ### #29 set-task-script — 2026-05-15 10:28 THERI
 - [x] Add set-task.js — surgical checkbox state update to reduce token usage

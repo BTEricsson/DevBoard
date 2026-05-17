@@ -120,8 +120,10 @@
       const planHtml = (proj.planTicket && proj.planTicket === g.ticket)
         ? `<span class="plan-badge">PLAN</span>`
         : '';
+      const parentHtml = proj.parentName ? `<div class="card-parent">${escHtml(proj.parentName)} /</div>` : '';
+      const nestedClass = proj.parentName ? ' card--nested' : '';
       return `
-        <div class="card" data-id="${cardId}" onclick="this.classList.toggle('expanded')">
+        <div class="card${nestedClass}" data-id="${cardId}" onclick="this.classList.toggle('expanded')">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="display:flex;align-items:center;gap:6px">
               <span class="status-badge badge-${g.status}" style="margin-bottom:0">${g.status}</span>
@@ -130,7 +132,7 @@
             </div>
             ${completedAtHtml}
           </div>
-          <div class="card-name">${escHtml(proj.name)}</div>
+          ${parentHtml}<div class="card-name">${escHtml(proj.name)}</div>
           <div class="card-desc" style="opacity:0.5;font-size:0.72rem">${ticket}${escHtml(g.name)}</div>
           <div class="progress-bar">
             <div class="progress-fill" style="width:${pct}%;background:${fillColor}"></div>
@@ -172,11 +174,13 @@
 
       const pinnedClass = proj.statusOverride ? ' pinned' : '';
       const planHtml = proj.planTicket ? `<span class="plan-badge">PLAN</span>` : '';
+      const parentHtml = proj.parentName ? `<div class="card-parent">${escHtml(proj.parentName)} /</div>` : '';
+      const nestedClass = proj.parentName ? ' card--nested' : '';
 
       return `
-        <div class="card" data-id="${escHtml(proj.id)}" onclick="this.classList.toggle('expanded')">
+        <div class="card${nestedClass}" data-id="${escHtml(proj.id)}" onclick="this.classList.toggle('expanded')">
           <span class="status-badge badge-${proj.status}${pinnedClass}">${proj.status}</span>${planHtml}
-          <div class="card-name" title="${escHtml(proj.folderName)}">${escHtml(proj.name)}</div>
+          ${parentHtml}<div class="card-name" title="${escHtml(proj.folderName || proj.name)}">${escHtml(proj.name)}</div>
           <div class="card-desc">${escHtml(proj.description || '')}</div>
           <div class="progress-bar">
             <div class="progress-fill" style="width:${pct}%;background:${fillColor}"></div>
@@ -217,10 +221,12 @@
         progressLabel = 'empty backlog';
       }
 
+      const parentHtml = proj.parentName ? `<div class="card-parent">${escHtml(proj.parentName)} /</div>` : '';
+      const nestedClass = proj.parentName ? ' card--nested' : '';
       return `
-        <div class="card${hasContent ? ' expanded' : ''}" data-id="${escHtml(proj.id)}__backlog" onclick="this.classList.toggle('expanded')">
+        <div class="card${nestedClass}" data-id="${escHtml(proj.id)}__backlog" onclick="this.classList.toggle('expanded')">
           <span class="status-badge" style="background:#a78bfa22;color:#a78bfa">backlog</span>
-          <div class="card-name">${escHtml(proj.name)}</div>
+          ${parentHtml}<div class="card-name">${escHtml(proj.name)}</div>
           <div class="progress-label">${progressLabel}</div>
           <div class="task-list">${taskListHtml}</div>
           <div class="card-footer">
@@ -258,9 +264,30 @@
           }
         } else {
           const total = (p.tasks.todo || []).length + (p.tasks.inProgress || []).length + (p.tasks.done || []).length;
-          if (total === 0 && p.status === 'pending') continue;
-          const col = cols[p.status] || cols.pending;
-          col.push({ id: p.id, html: renderCard(p) });
+          if (total > 0 || p.status !== 'pending') {
+            const col = cols[p.status] || cols.pending;
+            col.push({ id: p.id, html: renderCard(p) });
+          }
+        }
+
+        for (const nested of (p.nestedProjects || [])) {
+          const np = { ...nested, id: nested.path, folderName: nested.name, parentName: p.name };
+          if (np.hasTodo) {
+            cols.backlog.push({ id: `${np.id}__backlog`, html: renderBacklogCard(np) });
+          }
+          if (np.tasks && np.tasks.groups && np.tasks.groups.length > 0) {
+            for (const g of np.tasks.groups) {
+              const total = g.todo.length + g.inProgress.length + g.done.length;
+              if (total === 0 && g.status === 'pending') continue;
+              const col = cols[g.status] || cols.pending;
+              col.push({ id: `${np.id}__${g.ticket || g.name}`, completedAt: g.completedAt || null, html: renderGroupCard(g, np) });
+            }
+          } else if (np.tasks) {
+            const total = (np.tasks.todo || []).length + (np.tasks.inProgress || []).length + (np.tasks.done || []).length;
+            if (total === 0 && np.status === 'pending') continue;
+            const col = cols[np.status] || cols.pending;
+            col.push({ id: np.id, html: renderCard(np) });
+          }
         }
       }
 

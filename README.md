@@ -117,6 +117,24 @@ The hook is already wired up in `.claude/settings.json` — it activates automat
 
 A folder is treated as a project if it contains a `CLAUDE.md` file. Optionally add a `TODO.md` for task tracking.
 
+### Group folders
+
+A folder can act as a **group** that contains multiple sub-projects. Add a `CLAUDE.md` to the group folder itself — DevBoard will then scan one level deeper and surface each sub-project as a nested card on the board.
+
+```
+~/Projects/
+  my-group/           ← group folder (needs its own CLAUDE.md)
+    CLAUDE.md
+    service-a/        ← sub-project (needs its own CLAUDE.md + optional TODO.md)
+      CLAUDE.md
+      TODO.md
+    service-b/
+      CLAUDE.md
+      TODO.md
+```
+
+Sub-project cards are visually distinct: they have a colored left-border stripe and display the parent folder name as a breadcrumb above the project name.
+
 ### CLAUDE.md conventions
 
 - First `# Heading` → project name
