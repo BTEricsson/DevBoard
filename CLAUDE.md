@@ -10,25 +10,6 @@ All code must run on macOS, Linux, and Windows without modification:
 - No shell commands, Unix-specific syscalls, or platform-specific APIs
 - `ROOT_DIR` in `.env` should use forward slashes on all platforms (e.g. `C:/Users/...` on Windows)
 
-## Task Tracking
-
-Tasks and progress are tracked in `TODO.md`. Always keep it up to date:
-
-- When starting a task → mark it `- [~]`
-- When done → mark it `- [x]`
-- Use `node .claude/set-task.js <state> <pattern>` to update a single checkbox without rewriting the whole file (states: `pending`, `active`, `done`)
-- Use `node .claude/list-tasks.js` to get a compact summary of backlog and recent task groups — use this instead of reading TODO.md to save tokens; task text in the output can be used as patterns for `set-task.js`
-- New ideas or future work → add to `## Backlog`, not to a group
-- New feature work → create a new `### #N group-name` with `- [ ]` tasks, placed directly below `## Backlog`
-
-`## Backlog` is always at the top of `TODO.md`. New task groups go directly below it. Older completed groups accumulate at the bottom.
-
-Never leave a task as `[~]` once it is complete.
-
-Always add the task to `TODO.md` before implementing — even for small changes. No exceptions.
-
-Before making any code change, ask the user: "Do you want to add this to TODO.md first?" — only skip if the user explicitly says no or has already added it.
-
 ## Nested projects
 
 A folder with its own `CLAUDE.md` is treated as a **group**. DevBoard scans one level inside it for sub-projects (each also needing a `CLAUDE.md`). Sub-project cards appear on the board with a colored left-border stripe and a breadcrumb showing the group name.
@@ -37,11 +18,5 @@ A folder with its own `CLAUDE.md` is treated as a **group**. DevBoard scans one 
 
 `npm run cli` runs the board as a terminal UI (`cli.js`). It uses the same scanner/parser as the web server and live-reloads on file changes via chokidar.
 
-## Planning
-
-Active task group plans are stored in `PLAN.md`:
-
-- When starting a new task group → create `PLAN.md` with the design and rationale
-- When the group is done → delete `PLAN.md`
-- Only one plan at a time — `PLAN.md` always describes the current ongoing group
+@../.claude/task-tracking.md
 
