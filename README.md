@@ -38,6 +38,52 @@ npm start
 
 Open [http://localhost:3333](http://localhost:3333).
 
+## Desktop app (macOS / Windows)
+
+DevBoard can run as a native tray app — no browser or terminal needed.
+
+### Build
+
+```bash
+npm run dist:mac   # → dist/DevBoard-1.0.0-arm64.dmg  (Apple Silicon)
+                   # → dist/DevBoard-1.0.0.dmg         (Intel)
+npm run dist:win   # → dist/DevBoard Setup 1.0.0.exe
+```
+
+### Install (macOS)
+
+1. Open the `.dmg` and drag **DevBoard** to Applications
+2. First launch: macOS will block the unsigned app — go to **System Settings → Privacy & Security** and click **Open Anyway**
+3. DevBoard appears as an icon in the menu bar (top right)
+
+### Usage
+
+| Action | How |
+|--------|-----|
+| Show/hide board | Click the tray icon |
+| Quit | Right-click the tray icon → **Quit** |
+
+The app auto-starts the web server on launch — no manual `npm start` needed. OS notifications fire automatically when tasks are completed or task groups change.
+
+### .env for the installed app
+
+The `.env` file is bundled inside the app at build time. `ROOT_DIR` must be an **absolute path** when building for distribution:
+
+```env
+ROOT_DIR=/Users/username/Developer
+PORT=3333
+```
+
+After changing `.env`, rebuild with `npm run dist:mac` to pick up the new config.
+
+### Dev mode
+
+To run the tray app without packaging:
+
+```bash
+npm run electron
+```
+
 ## CLI
 
 Run the board in the terminal without a browser:

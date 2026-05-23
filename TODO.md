@@ -1,6 +1,13 @@
 ## Backlog
 - git-status-indicator
 
+### #31 electron-tray-app — 2026-05-23 THERI — 2026-05-23 08:31 THERI
+- [x] Install Electron + menubar package
+- [x] Create Electron main process that auto-starts the Node.js server as a child process
+- [x] Add tray icon asset and wire up the web board as the popup panel
+- [x] Send OS notifications when board changes are detected
+- [x] Package for macOS (.dmg) and Windows (.exe)
+
 ### #30 nested-project-discovery — 2026-05-17 THERI — 2026-05-17 16:40 THERI
 - [x] Extend scanner.js to discover CLAUDE.md files one level deep within each project directory
 - [x] Attach nested project data (name, tasks, backlog) to the parent project object

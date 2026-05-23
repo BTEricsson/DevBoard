@@ -1,15 +1,18 @@
 {
   "name": "devboard",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "Local kanban dashboard for dev projects",
+  "main": "electron/main.js",
   "scripts": {
     "start": "node server.js",
     "cli": "node cli.js",
+    "electron": "electron .",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Thomas Ericsson",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
@@ -17,5 +20,38 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "electron": "^42.2.0",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "se.getitright.devboard",
+    "productName": "DevBoard",
+    "extraResources": [
+      { "from": ".env", "to": ".env" }
+    ],
+    "files": [
+      "electron/**/*",
+      "server.js",
+      "scanner.js",
+      "parser.js",
+      "cli.js",
+      "public/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "electron/icons/icon.png",
+      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }]
+    },
+    "win": {
+      "icon": "electron/icons/icon.png",
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "linux": {
+      "icon": "electron/icons/icon.png",
+      "target": [{ "target": "AppImage", "arch": ["x64"] }]
+    }
   }
 }
