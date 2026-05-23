@@ -14,7 +14,13 @@ Runs on **macOS, Linux, and Windows**.
 npm install
 ```
 
-Create a `.env` file in the project root:
+Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+
 
 ```env
 ROOT_DIR=..
