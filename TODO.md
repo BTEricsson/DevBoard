@@ -1,6 +1,11 @@
 ## Backlog
 - git-status-indicator
 
+### #32 task-numbering-format — 2026-05-28 17:46
+- [x] 32.1 Update task-tracking.md with N.M numbered subtask rules
+- [x] 32.2 Update list-tasks.js and set-task.js header comments for N.M format
+- [x] 32.3 Update root CLAUDE.md task-format description
+
 ### #31 electron-tray-app — 2026-05-23 THERI — 2026-05-23 08:31 THERI
 - [x] Install Electron + menubar package
 - [x] Create Electron main process that auto-starts the Node.js server as a child process
