@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const chokidar = require('chokidar');
 
-const { scanProjects, readPlanTicket } = require('./scanner');
+const { scanProjects, scanNestedProjects, readPlanTicket } = require('./scanner');
 const { parseProject } = require('./parser');
 
 const PORT = process.env.PORT || 3333;
@@ -101,6 +101,7 @@ function rebuildProject(projectPath) {
     claudeMdPath,
     todoMdPath: fs.existsSync(todoMdPath) ? todoMdPath : null,
     planTicket: readPlanTicket(path.join(projectPath, 'PLAN.md')),
+    nestedProjects: scanNestedProjects(projectPath),
   };
   projectStore[projectPath] = buildProjectData(proj);
   if (stampCompletedGroups(projectStore[projectPath])) {
@@ -189,10 +190,15 @@ function setupWatcher() {
     const base = path.basename(filePath);
     if (!WATCHED.has(base)) return;
     const projectPath = path.dirname(filePath);
-    if (!projectStore[projectPath]) return;
-    rebuildProject(projectPath);
+    const targetPath = projectStore[projectPath]
+      ? projectPath
+      : projectStore[path.dirname(projectPath)]
+        ? path.dirname(projectPath)
+        : null;
+    if (!targetPath) return;
+    rebuildProject(targetPath);
     broadcastAll();
-    console.log(`[~] Updated: ${path.basename(projectPath)} (${base})`);
+    console.log(`[~] Updated: ${path.basename(targetPath)} (${base})`);
   });
 
   watcher.on('unlink', (filePath) => {
@@ -208,18 +214,28 @@ function setupWatcher() {
     }
     if (base === 'TODO.md') {
       const projectPath = path.dirname(filePath);
-      if (projectStore[projectPath]) {
-        rebuildProject(projectPath);
+      const targetPath = projectStore[projectPath]
+        ? projectPath
+        : projectStore[path.dirname(projectPath)]
+          ? path.dirname(projectPath)
+          : null;
+      if (targetPath) {
+        rebuildProject(targetPath);
         broadcastAll();
-        console.log(`[~] TODO.md removed: ${path.basename(projectPath)}`);
+        console.log(`[~] TODO.md removed: ${path.basename(targetPath)}`);
       }
     }
     if (base === 'PLAN.md') {
       const projectPath = path.dirname(filePath);
-      if (projectStore[projectPath]) {
-        rebuildProject(projectPath);
+      const targetPath = projectStore[projectPath]
+        ? projectPath
+        : projectStore[path.dirname(projectPath)]
+          ? path.dirname(projectPath)
+          : null;
+      if (targetPath) {
+        rebuildProject(targetPath);
         broadcastAll();
-        console.log(`[~] PLAN.md removed: ${path.basename(projectPath)}`);
+        console.log(`[~] PLAN.md removed: ${path.basename(targetPath)}`);
       }
     }
   });

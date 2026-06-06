@@ -247,6 +247,9 @@
 
     function renderAll(projects) {
       lastProjects = projects;
+      const expanded = new Set(
+        Array.from(document.querySelectorAll('.card.expanded')).map(el => el.dataset.id)
+      );
       const cols = { backlog: [], pending: [], active: [], complete: [] };
 
       for (const p of projects) {
@@ -306,10 +309,7 @@
         if (list.length === 0) {
           container.innerHTML = `<div class="empty-column">No cards</div>`;
         } else {
-          const expanded = new Set(
-            Array.from(container.querySelectorAll('.card.expanded')).map(el => el.dataset.id)
-          );
-          const visible = expandedCols.has(status) ? list : list.slice(0, PAGE_SIZE);
+            const visible = expandedCols.has(status) ? list : list.slice(0, PAGE_SIZE);
           const remaining = expandedCols.has(status) ? 0 : list.length - PAGE_SIZE;
           const showMoreBtn = remaining > 0
             ? `<button class="show-more-btn" onclick="showMore('${status}')">Show ${remaining} more</button>`

@@ -74,4 +74,4 @@ function scanProjects(rootDir) {
   return projects;
 }
 
-module.exports = { scanProjects, readPlanTicket };
+module.exports = { scanProjects, scanNestedProjects, readPlanTicket };
