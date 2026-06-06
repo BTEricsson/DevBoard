@@ -1,6 +1,15 @@
 ## Backlog
 - git-status-indicator
 
+### #34 sub-project-todo-watcher — 2026-06-06 — 2026-06-06 17:06
+- [x] 34.1 Export scanNestedProjects from scanner.js
+- [x] 34.2 Fix rebuildProject to include nestedProjects
+- [x] 34.3 Fix watcher change/unlink handlers to resolve sub-project paths to parent
+
+### #33 electron-blur-fix — 2026-06-01 — 2026-06-01 17:56
+- [x] 33.1 Remove blur-to-hide on window focus loss in electron/main.js
+- [x] 33.2 Preserve expanded card state across columns on WebSocket update
+
 ### #32 task-numbering-format — 2026-05-28 17:46
 - [x] 32.1 Update task-tracking.md with N.M numbered subtask rules
 - [x] 32.2 Update list-tasks.js and set-task.js header comments for N.M format

@@ -60,7 +60,6 @@ function createWindow() {
     webPreferences: { nodeIntegration: false, contextIsolation: true },
   });
   win.loadURL(BOARD_URL);
-  win.on('blur', () => { if (!win.webContents.isDevToolsOpened()) win.hide(); });
 }
 
 function positionWindow() {
