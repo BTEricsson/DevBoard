@@ -97,6 +97,41 @@ function toggleWindow() {
 
 // ── Notifications ────────────────────────────────────────────────────────────
 
+// Emit notifications for one project by comparing it to its previous snapshot.
+function diffProject(prev, proj) {
+  if (!prev) return;
+
+  const prevGroups = Object.fromEntries((prev.tasks?.groups || []).map(g => [g.name, g]));
+
+  for (const group of (proj.tasks?.groups || [])) {
+    const prevGroup = prevGroups[group.name];
+
+    // Group just completed
+    if (group.status === 'complete' && prevGroup && prevGroup.status !== 'complete') {
+      notify(`${proj.name}`, `#${group.ticket || group.name} done`);
+    }
+
+    // Task flipped to done
+    if (prevGroup) {
+      const prevDone = new Set(prevGroup.done || []);
+      for (const task of (group.done || [])) {
+        if (!prevDone.has(task)) {
+          notify(`${proj.name}: ${group.name}`, `✓ ${task}`);
+        }
+      }
+    }
+  }
+
+  // PLAN.md added
+  if (proj.planTicket && !prev.planTicket) {
+    notify(proj.name, `Plan added: ${proj.planTicket}`);
+  }
+  // PLAN.md removed (group completed)
+  if (!proj.planTicket && prev.planTicket) {
+    notify(proj.name, `Plan completed: ${prev.planTicket}`);
+  }
+}
+
 function diffAndNotify(next) {
   if (!prevProjects) { prevProjects = next; return; }
 
@@ -106,34 +141,12 @@ function diffAndNotify(next) {
     const prev = prevMap[proj.id];
     if (!prev) continue;
 
-    const prevGroups = Object.fromEntries((prev.tasks?.groups || []).map(g => [g.name, g]));
+    diffProject(prev, proj);
 
-    for (const group of (proj.tasks?.groups || [])) {
-      const prevGroup = prevGroups[group.name];
-
-      // Group just completed
-      if (group.status === 'complete' && prevGroup && prevGroup.status !== 'complete') {
-        notify(`${proj.name}`, `#${group.ticket || group.name} done`);
-      }
-
-      // Task flipped to done
-      if (prevGroup) {
-        const prevDone = new Set(prevGroup.done || []);
-        for (const task of (group.done || [])) {
-          if (!prevDone.has(task)) {
-            notify(`${proj.name}: ${group.name}`, `✓ ${task}`);
-          }
-        }
-      }
-    }
-
-    // PLAN.md added
-    if (proj.planTicket && !prev.planTicket) {
-      notify(proj.name, `Plan added: ${proj.planTicket}`);
-    }
-    // PLAN.md removed (group completed)
-    if (!proj.planTicket && prev.planTicket) {
-      notify(proj.name, `Plan completed: ${prev.planTicket}`);
+    // Nested sub-projects carry no `id`; match them by stable `path`.
+    const prevNested = Object.fromEntries((prev.nestedProjects || []).map(n => [n.path, n]));
+    for (const nested of (proj.nestedProjects || [])) {
+      diffProject(prevNested[nested.path], nested);
     }
   }
 
