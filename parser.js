@@ -17,9 +17,15 @@ function parseGroupHeading(raw) {
     name = name.slice(0, tsMatch.index).trim();
   }
 
-  // Strip any spurious date-only stamp " — YYYY-MM-DD [NICK]" (no time component)
-  const dateOnlyMatch = name.match(/\s+—\s+\d{4}-\d{2}-\d{2}(?:\s+[A-Z]{2,5})?$/);
-  if (dateOnlyMatch) {
+  // Strip trailing date-only stamp(s) " — YYYY-MM-DD [NICK]" (no time component).
+  // A date-only stamp still marks completion, so adopt it as completedAt when no
+  // full timestamp was found. Loop to clean up repeated/legacy multi-stamps.
+  let dateOnlyMatch;
+  while ((dateOnlyMatch = name.match(/\s+—\s+(\d{4}-\d{2}-\d{2})(?:\s+([A-Z]{2,5}))?$/))) {
+    if (!completedAt) {
+      completedAt = dateOnlyMatch[1];
+      if (dateOnlyMatch[2]) nick = dateOnlyMatch[2];
+    }
     name = name.slice(0, dateOnlyMatch.index).trim();
   }
 

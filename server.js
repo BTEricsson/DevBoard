@@ -72,12 +72,24 @@ function buildProjectData(proj) {
   };
 }
 
+// Stamp a project and every nested project under it. Nested parsed objects
+// carry `path` + `tasks` but not `todoMdPath`, so derive it from the path.
+function stampProjectTree(projData) {
+  let stamped = stampCompletedGroups(projData);
+  for (const nested of (projData.nestedProjects || [])) {
+    const todoMdPath = path.join(nested.path, 'TODO.md');
+    if (!fs.existsSync(todoMdPath)) continue;
+    if (stampCompletedGroups({ todoMdPath, tasks: nested.tasks })) stamped = true;
+  }
+  return stamped;
+}
+
 function loadAll() {
   const found = scanProjects(ROOT_DIR);
   const store = {};
   for (const proj of found) {
     store[proj.path] = buildProjectData(proj);
-    if (stampCompletedGroups(store[proj.path])) {
+    if (stampProjectTree(store[proj.path])) {
       store[proj.path] = buildProjectData(proj);
     }
   }
@@ -104,7 +116,7 @@ function rebuildProject(projectPath) {
     nestedProjects: scanNestedProjects(projectPath),
   };
   projectStore[projectPath] = buildProjectData(proj);
-  if (stampCompletedGroups(projectStore[projectPath])) {
+  if (stampProjectTree(projectStore[projectPath])) {
     // Re-parse after stamping so the store reflects the timestamps
     projectStore[projectPath] = buildProjectData(proj);
   }
@@ -148,7 +160,9 @@ function stampCompletedGroups(proj) {
   const lines = fs.readFileSync(resolved, 'utf8').split('\n');
   const updated = lines.map(line => {
     if (!/^#{3}\s/.test(line)) return line;
-    if (/\s+—\s+\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(line)) return line; // already stamped
+    // Already stamped: trailing date, with or without a time/nick. Treating a
+    // date-only stamp as complete prevents appending a duplicate timestamp.
+    if (/\s+—\s+\d{4}-\d{2}-\d{2}(\s+\d{2}:\d{2})?(\s+[A-Z]{2,5})?$/.test(line)) return line;
     const raw = line.replace(/^#{3}\s+/, '').trim();
     const ticketMatch = raw.match(/^#(\d+)\s+/);
     const lineTicket = ticketMatch ? ticketMatch[1] : null;

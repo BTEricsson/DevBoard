@@ -1,6 +1,12 @@
 ## Backlog
 - git-status-indicator
 
+### #35 nested-group-completion-stamping — 2026-06-26 — 2026-06-26 16:41
+- [x] 35.1 Recurse stampCompletedGroups into nestedProjects (write each nested TODO.md) in loadAll and rebuildProject
+- [x] 35.2 Treat date-only `— YYYY-MM-DD` group headings as completed (set completedAt) in parser.js
+- [x] 35.3 Recognize date-only headings as already-stamped in stampCompletedGroups (stop double-stamping)
+- [x] 35.4 Walk nestedProjects in diffAndNotify so nested completions produce notifications
+
 ### #34 sub-project-todo-watcher — 2026-06-06 — 2026-06-06 17:06
 - [x] 34.1 Export scanNestedProjects from scanner.js
 - [x] 34.2 Fix rebuildProject to include nestedProjects
