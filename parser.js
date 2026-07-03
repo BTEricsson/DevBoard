@@ -48,11 +48,13 @@ function parseGroupHeading(raw) {
   return { ticket, name, completedAt, nick };
 }
 
-function deriveGroupStatus(todo, inProgress, done) {
-  const total = todo.length + inProgress.length + done.length;
+function deriveGroupStatus(todo, inProgress, done, dropped) {
+  const total = todo.length + inProgress.length + done.length + dropped.length;
   if (total === 0) return 'pending';
-  if (done.length === total) return 'complete';
-  if (inProgress.length > 0 || done.length > 0) return 'active';
+  // A group is complete once nothing is left pending or in progress —
+  // every task is either done [x] or dropped [-].
+  if (todo.length === 0 && inProgress.length === 0) return 'complete';
+  if (inProgress.length > 0 || done.length > 0 || dropped.length > 0) return 'active';
   return 'pending';
 }
 
@@ -63,12 +65,13 @@ function extractTasks(content) {
   const todo = [];
   const inProgress = [];
   const done = [];
+  const dropped = [];
   const backlog = [];
   const groups = [];
 
   let inBacklogSection = false;
   let inInProgressSection = false;
-  let currentGroup = null; // { ticket, name, todo, inProgress, done }
+  let currentGroup = null; // { ticket, name, todo, inProgress, done, dropped }
 
   for (const line of lines) {
     // ## section headings
@@ -85,7 +88,7 @@ function extractTasks(content) {
       inBacklogSection = false; // task groups always follow the backlog section
       const raw = line.replace(/^#+\s+/, '').trim();
       const { ticket, name, completedAt, nick } = parseGroupHeading(raw);
-      currentGroup = { ticket, name, completedAt, nick, todo: [], inProgress: [], done: [] };
+      currentGroup = { ticket, name, completedAt, nick, todo: [], inProgress: [], done: [], dropped: [] };
       groups.push(currentGroup);
       continue;
     }
@@ -107,20 +110,23 @@ function extractTasks(content) {
     const isTodo = /^[-*]\s+\[\s\]\s+/.test(line);
     const isDone = /^[-*]\s+\[[xX]\]\s+/.test(line);
     const isInProgress = /^[-*]\s+\[~\]\s+/.test(line);
-    const isPlain = !isTodo && !isDone && !isInProgress && /^[-*]\s+/.test(line);
+    const isDropped = /^[-*]\s+\[-\]\s+/.test(line);
+    const isPlain = !isTodo && !isDone && !isInProgress && !isDropped && /^[-*]\s+/.test(line);
 
-    if (!isTodo && !isDone && !isInProgress && !(isPlain && (inInProgressSection || currentGroup))) continue;
+    if (!isTodo && !isDone && !isInProgress && !isDropped && !(isPlain && (inInProgressSection || currentGroup))) continue;
 
     let text = '';
     if (isTodo) text = line.replace(/^[-*]\s+\[\s\]\s+/, '').trim();
     else if (isDone) text = line.replace(/^[-*]\s+\[[xX]\]\s+/, '').trim();
     else if (isInProgress) text = line.replace(/^[-*]\s+\[~\]\s+/, '').trim();
+    else if (isDropped) text = line.replace(/^[-*]\s+\[-\]\s+/, '').trim();
     else text = line.replace(/^[-*]\s+/, '').trim();
     if (!text) continue;
 
     // Determine which bucket
     let bucket;
     if (isDone) bucket = 'done';
+    else if (isDropped) bucket = 'dropped';
     else if (isInProgress) bucket = 'inProgress';
     else if (isPlain && inInProgressSection) bucket = 'inProgress';
     else bucket = 'todo';
@@ -130,6 +136,7 @@ function extractTasks(content) {
     }
     // Always add to flat aggregates (for progress bar)
     if (bucket === 'done') done.push(text);
+    else if (bucket === 'dropped') dropped.push(text);
     else if (bucket === 'inProgress') inProgress.push(text);
     else todo.push(text);
   }
@@ -143,10 +150,11 @@ function extractTasks(content) {
     todo: g.todo,
     inProgress: g.inProgress,
     done: g.done,
-    status: deriveGroupStatus(g.todo, g.inProgress, g.done),
+    dropped: g.dropped,
+    status: deriveGroupStatus(g.todo, g.inProgress, g.done, g.dropped),
   }));
 
-  return { todo, inProgress, done, backlog, groups: processedGroups };
+  return { todo, inProgress, done, dropped, backlog, groups: processedGroups };
 }
 
 function parseProject(proj) {
@@ -191,7 +199,7 @@ function parseProject(proj) {
     }
   } catch (e) {}
 
-  let tasks = { todo: [], inProgress: [], done: [], backlog: [], groups: [] };
+  let tasks = { todo: [], inProgress: [], done: [], dropped: [], backlog: [], groups: [] };
   if (todoMdPath) {
     try {
       tasks = extractTasks(fs.readFileSync(todoMdPath, 'utf8'));
@@ -201,9 +209,11 @@ function parseProject(proj) {
   // Derive project status from non-backlog aggregates
   let status = statusOverride;
   if (!status) {
-    const total = tasks.todo.length + tasks.inProgress.length + tasks.done.length;
-    if (total > 0 && tasks.done.length === total) status = 'complete';
-    else if (tasks.inProgress.length > 0 || tasks.done.length > 0) status = 'active';
+    const dropped = tasks.dropped || [];
+    const total = tasks.todo.length + tasks.inProgress.length + tasks.done.length + dropped.length;
+    // Complete once nothing is pending or in progress (all done or dropped).
+    if (total > 0 && tasks.todo.length === 0 && tasks.inProgress.length === 0) status = 'complete';
+    else if (tasks.inProgress.length > 0 || tasks.done.length > 0 || dropped.length > 0) status = 'active';
     else status = 'pending';
   }
 

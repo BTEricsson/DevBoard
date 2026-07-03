@@ -1,6 +1,6 @@
 {
   "name": "devboard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local kanban dashboard for dev projects",
   "main": "electron/main.js",
   "scripts": {

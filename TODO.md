@@ -1,6 +1,14 @@
 ## Backlog
 - git-status-indicator
 
+### #36 dropped-task-state — 2026-07-03
+- [x] 36.1 parser.js: recognize `[-]` as a `dropped` bucket (flat + per-group), include in aggregates
+- [x] 36.2 parser.js: treat dropped as finished in deriveGroupStatus and project status (complete when no todo/inProgress)
+- [x] 36.3 public/index.html: render dropped tasks in Done column, count toward progress/total
+- [x] 36.4 public/style.css: dim + strikethrough styling and "dropped" tag for `.task-item.dropped`
+- [x] 36.5 cli.js: render dropped tasks in active/complete groups
+- [x] 36.6 .claude/set-task.js: add `dropped` → `[-]` state (and sync note)
+
 ### #35 nested-group-completion-stamping — 2026-06-26 — 2026-06-26 16:41
 - [x] 35.1 Recurse stampCompletedGroups into nestedProjects (write each nested TODO.md) in loadAll and rebuildProject
 - [x] 35.2 Treat date-only `— YYYY-MM-DD` group headings as completed (set completedAt) in parser.js

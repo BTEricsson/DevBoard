@@ -73,20 +73,23 @@
     }
 
     function renderTaskItem(text, cls) {
-      const icons = { 'in-progress': '◑', 'done': '✓', 'backlog': '·' };
+      const icons = { 'in-progress': '◑', 'done': '✓', 'dropped': '✕', 'backlog': '·' };
       const icon = icons[cls] || '○';
       return `<div class="task-item ${cls}"><span class="icon">${icon}</span><span>${escHtml(text)}</span></div>`;
     }
 
     function renderGroup(g) {
-      const total = g.todo.length + g.inProgress.length + g.done.length;
+      const dropped = g.dropped || [];
+      const total = g.todo.length + g.inProgress.length + g.done.length + dropped.length;
+      const closed = g.done.length + dropped.length;
       const ticket = g.ticket ? `<span class="group-ticket">#${escHtml(g.ticket)}</span>` : '';
       const tasks = [
         ...g.inProgress.map(t => renderTaskItem(t, 'in-progress')),
         ...g.todo.map(t => renderTaskItem(t, '')),
         ...g.done.map(t => renderTaskItem(t, 'done')),
+        ...dropped.map(t => renderTaskItem(t, 'dropped')),
       ].join('');
-      const countLabel = total ? ` ${g.done.length}/${total}` : '';
+      const countLabel = total ? ` ${closed}/${total}` : '';
       return `
         <div class="group-block">
           <div class="group-header">
@@ -99,8 +102,10 @@
     }
 
     function renderGroupCard(g, proj) {
-      const total = g.todo.length + g.inProgress.length + g.done.length;
-      const pct = total ? Math.round((g.done.length / total) * 100) : 0;
+      const dropped = g.dropped || [];
+      const total = g.todo.length + g.inProgress.length + g.done.length + dropped.length;
+      const closed = g.done.length + dropped.length;
+      const pct = total ? Math.round((closed / total) * 100) : 0;
       const colorMap = { pending: '#fbbf24', active: '#60a5fa', complete: '#4ade80' };
       const fillColor = colorMap[g.status] || '#fbbf24';
       const ticket = g.ticket ? `#${escHtml(g.ticket)} ` : '';
@@ -108,8 +113,10 @@
         ...g.inProgress.map(t => renderTaskItem(t, 'in-progress')),
         ...g.todo.map(t => renderTaskItem(t, '')),
         ...g.done.map(t => renderTaskItem(t, 'done')),
+        ...dropped.map(t => renderTaskItem(t, 'dropped')),
       ].join('') || '<div class="task-item"><span class="icon">—</span><span>No tasks</span></div>';
-      const progressLabel = total ? `${g.done.length} / ${total} tasks done` : 'No tasks';
+      const droppedLabel = dropped.length ? ` · ${dropped.length} dropped` : '';
+      const progressLabel = total ? `${closed} / ${total} tasks done${droppedLabel}` : 'No tasks';
       const cardId = escHtml(`${proj.id}__${g.ticket || g.name}`);
       const completedAtHtml = g.completedAt
         ? `<span class="group-completed-at">${escHtml(g.completedAt)}</span>`
@@ -147,9 +154,10 @@
     }
 
     function renderCard(proj) {
-      const { todo = [], inProgress = [], done = [], backlog = [], groups = [] } = proj.tasks || {};
-      const total = todo.length + inProgress.length + done.length;
-      const pct = total ? Math.round((done.length / total) * 100) : 0;
+      const { todo = [], inProgress = [], done = [], dropped = [], backlog = [], groups = [] } = proj.tasks || {};
+      const closed = done.length + dropped.length;
+      const total = todo.length + inProgress.length + closed;
+      const pct = total ? Math.round((closed / total) * 100) : 0;
       const colorMap = { pending: '#fbbf24', active: '#60a5fa', complete: '#4ade80' };
       const fillColor = colorMap[proj.status] || '#fbbf24';
 
@@ -160,6 +168,7 @@
           ...inProgress.map(t => renderTaskItem(t, 'in-progress')),
           ...todo.map(t => renderTaskItem(t, '')),
           ...done.map(t => renderTaskItem(t, 'done')),
+          ...dropped.map(t => renderTaskItem(t, 'dropped')),
         ].join('') || '<div class="task-item"><span class="icon">—</span><span>No tasks found</span></div>';
       }
 
@@ -169,7 +178,7 @@
         : '';
 
       const progressLabel = total
-        ? `${done.length} / ${total} tasks done${backlog.length ? ` · ${backlog.length} in backlog` : ''}`
+        ? `${closed} / ${total} tasks done${dropped.length ? ` · ${dropped.length} dropped` : ''}${backlog.length ? ` · ${backlog.length} in backlog` : ''}`
         : backlog.length ? `${backlog.length} in backlog` : 'No tasks';
 
       const pinnedClass = proj.statusOverride ? ' pinned' : '';
@@ -212,9 +221,10 @@
         hasContent = tail.length > 0;
         taskListHtml = tail.length
           ? tail.map(g => {
-              const total = g.todo.length + g.inProgress.length + g.done.length;
+              const closed = g.done.length + (g.dropped || []).length;
+              const total = g.todo.length + g.inProgress.length + closed;
               const label = g.ticket ? `#${escHtml(g.ticket)} ${escHtml(g.name)}` : escHtml(g.name);
-              const count = total ? ` (${g.done.length}/${total})` : '';
+              const count = total ? ` (${closed}/${total})` : '';
               return `<div class="task-item"><span class="icon">·</span><span style="opacity:0.6">${label}${count}</span></div>`;
             }).join('')
           : `<div class="task-item"><span class="icon">—</span><span style="opacity:0.4">no backlog items</span></div>`;
@@ -260,13 +270,13 @@
 
         if (p.tasks.groups && p.tasks.groups.length > 0) {
           for (const g of p.tasks.groups) {
-            const total = g.todo.length + g.inProgress.length + g.done.length;
+            const total = g.todo.length + g.inProgress.length + g.done.length + (g.dropped || []).length;
             if (total === 0 && g.status === 'pending') continue;
             const col = cols[g.status] || cols.pending;
             col.push({ id: `${p.id}__${g.ticket || g.name}`, completedAt: g.completedAt || null, html: renderGroupCard(g, p) });
           }
         } else {
-          const total = (p.tasks.todo || []).length + (p.tasks.inProgress || []).length + (p.tasks.done || []).length;
+          const total = (p.tasks.todo || []).length + (p.tasks.inProgress || []).length + (p.tasks.done || []).length + (p.tasks.dropped || []).length;
           if (total > 0 || p.status !== 'pending') {
             const col = cols[p.status] || cols.pending;
             col.push({ id: p.id, html: renderCard(p) });
@@ -280,13 +290,13 @@
           }
           if (np.tasks && np.tasks.groups && np.tasks.groups.length > 0) {
             for (const g of np.tasks.groups) {
-              const total = g.todo.length + g.inProgress.length + g.done.length;
+              const total = g.todo.length + g.inProgress.length + g.done.length + (g.dropped || []).length;
               if (total === 0 && g.status === 'pending') continue;
               const col = cols[g.status] || cols.pending;
               col.push({ id: `${np.id}__${g.ticket || g.name}`, completedAt: g.completedAt || null, html: renderGroupCard(g, np) });
             }
           } else if (np.tasks) {
-            const total = (np.tasks.todo || []).length + (np.tasks.inProgress || []).length + (np.tasks.done || []).length;
+            const total = (np.tasks.todo || []).length + (np.tasks.inProgress || []).length + (np.tasks.done || []).length + (np.tasks.dropped || []).length;
             if (total === 0 && np.status === 'pending') continue;
             const col = cols[np.status] || cols.pending;
             col.push({ id: np.id, html: renderCard(np) });

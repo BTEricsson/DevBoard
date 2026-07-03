@@ -176,6 +176,7 @@ function renderBoard() {
     for (const t of (g.inProgress || [])) lines.push(`      ${c.blue('◑')} ${t}`);
     for (const t of (g.todo       || [])) lines.push(`      ${c.dim('○')} ${t}`);
     for (const t of (g.done       || [])) lines.push(`      ${c.dim('✓')} ${c.dim(t)}`);
+    for (const t of (g.dropped    || [])) lines.push(`      ${c.dim('✕')} ${c.dim(t + ' (dropped)')}`);
     lines.push('');
   }
 
@@ -195,6 +196,7 @@ function renderBoard() {
         const stamp = g.completedAt ? c.dim(`  ${g.completedAt}`) : '';
         lines.push(`  ${c.green('✓')} ${c.dim(label)}${stamp}`);
         for (const t of (g.done || [])) lines.push(`      ${c.dim('✓ ' + t)}`);
+        for (const t of (g.dropped || [])) lines.push(`      ${c.dim('✕ ' + t + ' (dropped)')}`);
         lines.push('');
       }
     }
