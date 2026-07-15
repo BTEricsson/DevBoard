@@ -11,7 +11,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/check-plan.sh",
+            "command": "node .claude/hooks/check-plan.js",
             "statusMessage": "Checking for PLAN.md..."
           }
         ]

@@ -4,6 +4,7 @@ dist/
 .env
 .claude/*
 !.claude/settings.json
+!.claude/*.js
 !.claude/hooks/
 .claude/hooks/*
-!.claude/hooks/check-plan.sh
+!.claude/hooks/check-plan.js
